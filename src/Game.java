@@ -3,6 +3,7 @@ import cells.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public class Game {
 
@@ -10,18 +11,32 @@ public class Game {
     boolean isComputerTurn;
     String[] cellsSymbols = {" & ", "...", "|||", "√√√", "∑∑∑", "% %", " @ "};
     String[] playersSymbols = {" O ", " X "};
+    int player1Score;
+    int player2Score;
 
     // default constructor, used to create a new game object
     public Game() {
         board = new ArrayList<>();
 
         // adding players pawns, i: 0 -> 13
-        for (int i = 0; i <= 13; i++) {
+//        for (int i = 0; i <= 13; i++) {
+//            if (i % 2 == 0)
+//                board.add(new Pawn(playersSymbols[0]));
+//            else
+//                board.add(new Pawn(playersSymbols[1]));
+//        }
+
+        for (int i = 0; i <= 3; i++) {
             if (i % 2 == 0)
                 board.add(new Pawn(playersSymbols[0]));
             else
                 board.add(new Pawn(playersSymbols[1]));
         }
+
+        for (int i = 4; i <= 13; i++) {
+            board.add(new Cell());
+        }
+
 
         // adding rebirth house, i = 14
         board.add(new Cell(cellsSymbols[0]));
@@ -41,6 +56,10 @@ public class Game {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("player").append(playersSymbols[0])
+                .append("score : ").append(player1Score).append("\n");
+        sb.append("player").append(playersSymbols[1])
+                .append("score : ").append(player2Score).append("\n\n");
 
         sb.append("      ");
         // printing col numbers
@@ -95,23 +114,14 @@ public class Game {
 
         // get chosen cell index and object
         int chosenCellIndex = getCellIndex(cellRow, cellCol);
-        Cell chosenCellObject = board.get(chosenCellIndex);
 
-        // check if chosen cell has a pawn in it
-        if (!(chosenCellObject instanceof Pawn)) {
-            IO.println("------------- chosen cell has no pawn in it! -------------\n");
+        if (!isValidMove(chosenCellIndex, steps)) {
+            IO.println("------------- incorrect move! -------------\n");
             return;
         }
 
-        // check if player did not choose his own pawn color
-        String playerColor = (isComputerTurn ? " O " : " X ");
-        if (!chosenCellObject.symbol.equals(playerColor)) {
-            IO.println("------------- chosen pawn is not owned by current player! -------------\n");
-            return;
-        }
-
-        // if chosen pawn is promoted
-        if (isPromotionMove(chosenCellIndex, steps)) {
+        // if move leads to a promotion
+        if (isPromoted(chosenCellIndex, steps)) {
             IO.println("------------- pawn promoted! -------------\n");
 
             // switch to the other player's turn
@@ -120,24 +130,16 @@ public class Game {
             // end current player's turn
             return;
         }
+        // if it's not a promotion move
+        // send current player pawn from cells 28 -> 30 to rebirth
+        else {
+            cleanSpecialCells();
+        }
 
         // get target cell index
         int targetCellIndex = chosenCellIndex + steps;
 
-        // check if steps lead to out of boundaries index
-        // this conditions is used for testing in development
-        if (!indexInBoundaries(targetCellIndex) && !(chosenCellIndex < 25)) {
-            IO.println("------------- incorrect move! -------------\n");
-            return;
-        }
-
-        // check if player is jumping over happiness house
-        if (jumpingOverHappiness(chosenCellIndex, steps)) {
-            IO.println("------------- jumping over happiness house is not allowed -------------\n");
-            return;
-        }
-
-        // check if target cell is water house
+        // check if target cell is water house and send pawn to rebirth
         if (targetCellIndex == 26) {
             sendToRebirth(chosenCellIndex);
         }
@@ -153,8 +155,17 @@ public class Game {
             }
         }
 
-        // switching players turns
+        // switch players turns after move is done correctly
         switchTurns();
+    }
+
+    // get possible moves, takes allowed steps and checks current player
+    // returns a list of movable pawns numbers.
+    ArrayList<Integer> getPossibleMoves(int allowedSteps) {
+        ArrayList<Integer> pawnIndexes = new ArrayList<Integer>();
+
+
+        return pawnIndexes;
     }
 
 
@@ -183,19 +194,13 @@ public class Game {
 
     // check if the pawn is NOT jumping over happiness cell
     boolean jumpingOverHappiness(int pawnIndex, int steps) {
-        // check if target cell index is greater than happiness cell index
-        if (pawnIndex + steps > 25) {
-            // check if pawn is standing in or after happiness cell
-            // then move is allowed (passing / passed through happiness cell)
-            if (pawnIndex >= 25)
-                return false;
-            else
-                // not allowed move (jumping over happiness cell)
-                return true;
+        // check if chosen pawn index < 25 and target cell index > 25
+        if (pawnIndex < 25 && pawnIndex + steps > 25) {
+            // jumping over happiness house
+            return true;
         }
-        // target cell index is less than 25
-        else
-            return false;
+        // not jumping
+        return false;
     }
 
     // return an object of the cell original type
@@ -212,6 +217,7 @@ public class Game {
         board.set(cellIndex, temp);
     }
 
+    // check if cell is empty
     boolean isEmpty(int index) {
         // putting all symbols of empty cells in a list
         ArrayList<String> symbolList = new ArrayList<>(List.of(this.cellsSymbols));
@@ -236,29 +242,20 @@ public class Game {
 
     // switch positions of two pawns
     void swapPawns(int cell1Index, int cell2Index) {
-        Pawn pawn1 = (Pawn) board.get(cell1Index);
-        Pawn pawn2 = (Pawn) board.get(cell2Index);
-
-        // check if pawns has same symbol
-        if (pawn1.colorEquals(pawn2)) {
-            IO.println("------------- can't swap between two pawns of the same color! -------------\n");
-        }
-        // perform pawns swap
-        else {
-            Collections.swap(board, cell1Index, cell2Index);
-        }
+        Collections.swap(board, cell1Index, cell2Index);
     }
 
+    // send pawn to rebirth cell or first empty cell before it
     void sendToRebirth(int index) {
         Cell chosenPawn = board.get(index);
 
         // if cell 14 is empty (cell 14 = " & ")
-        if (board.get(14).symbol.equals(cellsSymbols[0]))
+        if (isEmpty(14))
             board.set(14, chosenPawn);
         else {
             int i = 1;
             // while the symbol != "..." go back one step
-            while (!(board.get(14 - i).symbol.equals(cellsSymbols[1]))) {
+            while (!isEmpty(14 - i)) {
                 i++;
             }
             board.set(14 - i, chosenPawn);
@@ -266,6 +263,7 @@ public class Game {
         resetCell(index);
     }
 
+    // print name of current player
     void printPlayerName() {
         if (isComputerTurn)
             IO.println("~ [ O's turn ] ~");
@@ -273,83 +271,174 @@ public class Game {
             IO.println("~ [ X's turn ] ~");
     }
 
+    // pass turns between players
     void switchTurns() {
         isComputerTurn = !isComputerTurn;
     }
 
     // check if chosen pawn is promotable and promote it
-    boolean isPromotionMove(int chosenCellIndex, int steps) {
-        String playerColor = (isComputerTurn ? " O " : " X ");
-
+    boolean isPromoted(int chosenCellIndex, int steps) {
         // tells if current player's turn should be ended at the end of this function
-        boolean endTurn = false;
+        boolean isPromoted = false;
 
-        // player chose pawn in cell 25
-        if (chosenCellIndex == 25) {
-            // if steps leads to a promotion
-            if (steps == 5) {
-                // promote pawn
-                resetCell(25);
+        // player chose pawn in cell 25 and steps leads to a promotion
+        if (chosenCellIndex == 25 && steps == 5) {
+            // promote pawn
+            resetCell(25);
 
-                // end turn after this function is executed
-                endTurn = true;
-            }
-        }
-
-        // player chose pawn in cell 27
-        if (chosenCellIndex == 27) {
-            // if steps leads to a promotion
-            if (steps == 3) {
-                // promote pawn
-                resetCell(27);
-
-                // end turn after this function is executed
-                endTurn = true;
-            }
-        }
-        // player did not choose cell 27
-        else {
-            // check if a pawn already exists in cell 27, and it's owned by the current player
-            if (board.get(27).symbol.equals(playerColor)) {
-                sendToRebirth(27);
-            }
-        }
-
-        // player chose pawn in cell 28
-        if (chosenCellIndex == 28) {
-            // if steps leads to a promotion
-            if (steps == 2) {
-                // promote pawn
-                resetCell(28);
-
-                // end turn after this function is executed
-                endTurn = true;
-            }
-        }
-        // player did not choose cell 28
-        else {
-            // check if a pawn already exists in cell 28, and it's owned by the current player
-            if (board.get(28).symbol.equals(playerColor)) {
-                sendToRebirth(28);
-            }
-        }
-
-        // player chose pawn in cell 29
-        if (chosenCellIndex == 29) {
-            // whatever steps count is, promote pawn
-            resetCell(29);
+            // increase score of current player
+            if (isComputerTurn)
+                player1Score++;
+            else player2Score++;
 
             // end turn after this function is executed
-            endTurn = true;
-        }
-        // player did not choose cell 29
-        else {
-            // check if a pawn already exists in cell 29, and it's owned by the current player
-            if (board.get(29).symbol.equals(playerColor)) {
-                sendToRebirth(29);
-            }
+            isPromoted = true;
         }
 
-        return endTurn;
+        // player chose pawn in cell 27 and steps leads to a promotion
+        if (chosenCellIndex == 27 && steps == 3) {
+            // promote pawn
+            resetCell(27);
+
+            // increase score of current player
+            if (isComputerTurn)
+                player1Score++;
+            else player2Score++;
+
+            // end turn after this function is executed
+            isPromoted = true;
+        }
+
+        // player chose pawn in cell 28 and steps leads to a promotion
+        if (chosenCellIndex == 28 && steps == 2) {
+            // promote pawn
+            resetCell(28);
+
+            // increase score of current player
+            if (isComputerTurn)
+                player1Score++;
+            else player2Score++;
+
+            // end turn after this function is executed
+            isPromoted = true;
+        }
+
+        // player chose pawn in cell 29 and whatever steps count is
+        if (chosenCellIndex == 29) {
+            // promote pawn
+            resetCell(29);
+
+            // increase score of current player
+            if (isComputerTurn)
+                player1Score++;
+            else player2Score++;
+
+            // end turn after this function is executed
+            isPromoted = true;
+        }
+
+        return isPromoted;
+    }
+
+    // send pawns to in cells 27 -> 29 rebirth
+    void cleanSpecialCells() {
+        String currentPlayerColor = (isComputerTurn ? " O " : " X ");
+
+        // check if a pawn already exists in cell 27, and it's owned by the current player
+        if (board.get(27).symbol.equals(currentPlayerColor)) {
+            sendToRebirth(27);
+        }
+
+        // check if a pawn already exists in cell 28, and it's owned by the current player
+        if (board.get(28).symbol.equals(currentPlayerColor)) {
+            sendToRebirth(28);
+        }
+
+        // check if a pawn already exists in cell 29, and it's owned by the current player
+        if (board.get(29).symbol.equals(currentPlayerColor)) {
+            sendToRebirth(29);
+        }
+    }
+
+    // throw sticks to get steps count
+    public int toss() {
+        int steps = 0;
+        Random random = new Random();
+
+        for (int i = 0; i < 4; i++) {
+            // generate 0 or 1 randomly with equal possibility
+            steps += random.nextInt(2);
+        }
+        return steps == 0 ? 5 : steps;
+    }
+
+    // check wining status and returns 0: no winner, 1: player1 won, 2: player2 won
+    int hasWinner() {
+        boolean win = false;
+        int player1Pawns = 0;
+        int player2Pawns = 0;
+
+        for (Cell cell : board) {
+            if (cell.symbol.equals(playersSymbols[0]))
+                player1Pawns++;
+
+            if (cell.symbol.equals(playersSymbols[1]))
+                player2Pawns++;
+        }
+
+        if (player1Pawns == 0) {
+            IO.println("------------- player" + playersSymbols[0] + "Won! -------------\n");
+            return 1;
+        }
+
+        if (player2Pawns == 0) {
+            IO.println("------------- player" + playersSymbols[1] + "Won! -------------\n");
+            return 2;
+        }
+
+        return 0;
+    }
+
+    // check if a move is correct
+    boolean isValidMove(int chosenCellIndex, int steps) {
+        // get current player color
+        String currentPlayerColor = (isComputerTurn ? " O " : " X ");
+
+        // get chosen cell object
+        Cell chosenCellObject = board.get(chosenCellIndex);
+
+        // check if chosen cell do not have a pawn in it
+        if (!(chosenCellObject instanceof Pawn))
+            return false;
+
+        // check if player did not choose a pawn of his own color
+        if (!chosenCellObject.symbol.equals(currentPlayerColor))
+            return false;
+
+        // if pawn is standing in cells 25 -> 29 and steps lead outside board
+        // examples: 25 + 5 or 27 + 3 or 28 + 2, ...
+        // we don't have to check target cell object symbol
+        // this why we only check if index is smaller than board size
+        if (chosenCellIndex + steps < board.size()) {
+            Cell targetCellObject = board.get(chosenCellIndex + steps);
+
+            // check if swapping between two pawns of the same color
+            if (chosenCellObject.symbol.equals(targetCellObject.symbol))
+                return false;
+        }
+
+        // check if player is jumping over happiness house
+        if (jumpingOverHappiness(chosenCellIndex, steps))
+            return false;
+
+        // applying wrong steps on a promotable pawn
+        if (chosenCellIndex == 27 && steps != 3)
+            return false;
+
+        // applying wrong steps on a promotable pawn
+        if (chosenCellIndex == 28 && steps != 2)
+            return false;
+
+        return true;
     }
 }
