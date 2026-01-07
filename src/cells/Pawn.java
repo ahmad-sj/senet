@@ -13,4 +13,9 @@ public class Pawn extends Cell {
     public String getColor() {
         return this.symbol;
     }
+
+    @Override
+    public Pawn clone() {
+        return (Pawn) super.clone();
+    }
 }

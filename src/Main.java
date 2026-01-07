@@ -17,8 +17,8 @@ public class Main {
 
             // generating steps randomly (throwing sticks)
 //            int steps = game.toss();
-//            IO.print("------- allowed steps: [ " + steps + " ] -------\n\n");
-            
+//            IO.print("------- allowed steps: [" + steps + "] -------\n\n");
+
             // Entering steps manually
             IO.print("Enter steps: ");
             int steps = Integer.parseInt(IO.readln());
@@ -26,13 +26,10 @@ public class Main {
             // printing player's movable pawns
             ArrayList<Integer> movablePawnsIndexes = game.getPossibleMoves(steps);
             IO.print("indexes of current player movable pawns with (" + steps + ") steps are:\n");
-
             IO.print("[");
             for (int i = 0; i < movablePawnsIndexes.size(); i++) {
                 IO.print((movablePawnsIndexes.get(i) + 1));
-
-                if (i + 1 < movablePawnsIndexes.size())
-                    IO.print(", ");
+                if (i + 1 < movablePawnsIndexes.size()) IO.print(", ");
             }
             IO.println("]\n");
 
@@ -48,6 +45,5 @@ public class Main {
             game.playerMove(row, col, steps);
             IO.println(game);
         }
-
     }
 }

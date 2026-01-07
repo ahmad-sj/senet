@@ -5,14 +5,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class Game {
+public class Game implements Cloneable {
 
     ArrayList<Cell> board;
     boolean isComputerTurn;
-    String[] cellsSymbols = {" & ", "...", "|||", "√√√", "∑∑∑", "% %", " @ "};
-    String[] playersSymbols = {" O ", " X "};
     int player1Score;
     int player2Score;
+
+    String[] cellsSymbols = {" & ", "...", "|||", "√√√", "∑∑∑", "% %", " @ "};
+    String[] playersSymbols = {" O ", " X "};
 
     // default constructor, used to create a new game object
     public Game() {
@@ -49,6 +50,14 @@ public class Game {
         // adding special cells, i: 25 -> 29
         for (int i = 2; i <= 6; i++) {
             board.add(new Cell(cellsSymbols[i]));
+        }
+    }
+
+    public Game(ArrayList<Cell> board) {
+        this.board = new ArrayList<>();
+
+        for (int i = 0; i < board.size(); i++) {
+            board.add(board.get(i).clone());
         }
     }
 
@@ -461,8 +470,19 @@ public class Game {
     }
 
     @Override
-    protected Object clone() throws CloneNotSupportedException {
+    public Game clone() {
+        try {
+            Game cloned = (Game) super.clone();
 
-        return super.clone();
+            cloned.board = new ArrayList<>();
+            for (Cell cell : this.board) {
+                cloned.board.add(cell.clone());
+            }
+            return cloned;
+
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e);
+        }
     }
 }
+
