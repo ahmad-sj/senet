@@ -105,6 +105,15 @@ public class Game {
     // play functions
 
     // player move function
+    public void playerMove(int cellRow, int cellCol, int steps) {
+        move(cellRow - 1, cellCol - 1, steps);
+    }
+
+    public void computerMove() {
+
+    }
+
+    // move function
     public void move(int cellRow, int cellCol, int steps) {
         // check if entered row and col are in board boundaries
         if (!isValidCoors(cellRow, cellCol)) {
@@ -164,6 +173,15 @@ public class Game {
     ArrayList<Integer> getPossibleMoves(int allowedSteps) {
         ArrayList<Integer> pawnIndexes = new ArrayList<Integer>();
 
+        String currentPlayerColor = (isComputerTurn ? " O " : " X ");
+
+        for (int i = 0; i < board.size(); i++) {
+            if (board.get(i).symbol.equals(currentPlayerColor)) {
+                if (isValidMove(i, allowedSteps)) {
+                    pawnIndexes.add(i);
+                }
+            }
+        }
 
         return pawnIndexes;
     }
@@ -440,5 +458,11 @@ public class Game {
             return false;
 
         return true;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+
+        return super.clone();
     }
 }

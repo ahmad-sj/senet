@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Main {
@@ -10,24 +11,41 @@ public class Main {
 
         while (game.hasWinner() == 0) {
 
-//            int steps = game.toss();
-//            IO.print("------- allowed steps: [ " + steps + " ] -------\n\n");
+            IO.println("---------------------------------------------------------------------------\n");
 
             game.printPlayerName();
 
+            // generating steps randomly (throwing sticks)
+//            int steps = game.toss();
+//            IO.print("------- allowed steps: [ " + steps + " ] -------\n\n");
+            
+            // Entering steps manually
+            IO.print("Enter steps: ");
+            int steps = Integer.parseInt(IO.readln());
+
+            // printing player's movable pawns
+            ArrayList<Integer> movablePawnsIndexes = game.getPossibleMoves(steps);
+            IO.print("indexes of current player movable pawns with (" + steps + ") steps are:\n");
+
+            IO.print("[");
+            for (int i = 0; i < movablePawnsIndexes.size(); i++) {
+                IO.print((movablePawnsIndexes.get(i) + 1));
+
+                if (i + 1 < movablePawnsIndexes.size())
+                    IO.print(", ");
+            }
+            IO.println("]\n");
+
+            // choosing a pawn to move
             IO.print("Enter pawn row: ");
             int row = Integer.parseInt(IO.readln());
 
             IO.print("Enter pawn col: ");
             int col = Integer.parseInt(IO.readln());
 
-            IO.print("Enter steps: ");
-            int steps = Integer.parseInt(IO.readln());
+            IO.println();
 
-            IO.println("\n");
-
-            game.move(row - 1, col - 1, steps);
-
+            game.playerMove(row, col, steps);
             IO.println(game);
         }
 
