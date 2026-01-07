@@ -106,7 +106,15 @@ public class Game implements Cloneable {
     // play functions
 
     // player move function
-    public void playerMove(int cellRow, int cellCol, int steps) {
+    public void playerMove(int steps) {
+
+        // taking input from user to choose a pawn to move it
+        IO.print("Enter pawn row: ");
+        int cellRow = Integer.parseInt(IO.readln());
+        IO.print("Enter pawn col: ");
+        int cellCol = Integer.parseInt(IO.readln());
+        IO.println();
+
         // check if entered row and col are in board boundaries
         if (!isValidCoors(cellRow - 1, cellCol - 1)) {
             IO.println("------------- incorrect row or col number! -------------\n");
@@ -116,12 +124,29 @@ public class Game implements Cloneable {
         // get chosen cell index and object
         int chosenCellIndex = getCellIndex(cellRow - 1, cellCol - 1);
 
+        // passing values to main move function
         move(chosenCellIndex, steps);
     }
 
-    public void computerMove() {
+    // =================================================================================================================
+    // implement following functions properly
 
+    public void computerMove(int steps) {
+        // temporarily using playerMove function here
+        // main move function should be called here by expect min max algorithm
+        // and with the help of getPossibleGames function and heuristic function
+        // when choosing a game object as the best move to take
+        // chosen game object should be wrapped with the Node class
+        // and added to a list to keep track of solution path
+        playerMove(steps);
     }
+
+    int heuristic() {
+        // implement code here to evaluate current game object
+        return 0;
+    }
+
+    // =================================================================================================================
 
     // main move function
     public void move(int chosenCellIndex, int steps) {
@@ -155,14 +180,7 @@ public class Game implements Cloneable {
         }
         // move pawn to an empty cell or swap pawns if target cell is busy
         else {
-            // check if target cell is empty
-            if (isEmpty(targetCellIndex)) {
-                performMove(chosenCellIndex, targetCellIndex);
-            }
-            // target cell has a pawn in it
-            else {
-                swapPawns(chosenCellIndex, targetCellIndex);
-            }
+            performMove(chosenCellIndex, targetCellIndex);
         }
 
         // switch players turns after move is done correctly
@@ -206,10 +224,6 @@ public class Game implements Cloneable {
 
         return possibleGames;
     }
-
-
-    // ========================================================================
-    // helper functions
 
     // check if entered row and col are in board boundaries
     boolean isValidCoors(int row, int col) {
@@ -263,15 +277,23 @@ public class Game implements Cloneable {
         return symbolList.contains(cell.symbol);
     }
 
-    // perform move if target cell is empty
+    // move pawn to an empty cell or swap pawns if target cell is busy
     void performMove(int sourceCellIndex, int targetCellIndex) {
-        Cell sourceCell = board.get(sourceCellIndex);
+        // check if target cell is empty
+        if (isEmpty(targetCellIndex)) {
+            Cell sourceCell = board.get(sourceCellIndex);
 
-        //place sourceCell in target cell
-        board.set(targetCellIndex, sourceCell);
+            //place sourceCell in target cell
+            board.set(targetCellIndex, sourceCell);
 
-        // reset sourceCell cell to its original type
-        resetCell(sourceCellIndex);
+            // reset sourceCell cell to its original type
+            resetCell(sourceCellIndex);
+        }
+        // target cell has a pawn in it
+        else {
+            swapPawns(sourceCellIndex, targetCellIndex);
+        }
+
     }
 
     // switch positions of two pawns

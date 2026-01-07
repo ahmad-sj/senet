@@ -10,18 +10,18 @@ public class Main {
         IO.println(game);
 
         while (game.hasWinner() == 0) {
-
             IO.println("---------------------------------------------------------------------------\n");
-
             game.printPlayerName();
 
             // generating steps randomly (throwing sticks)
 //            int steps = game.toss();
 //            IO.print("------- allowed steps: [" + steps + "] -------\n\n");
 
+
             // Entering steps manually
             IO.print("Enter steps: ");
             int steps = Integer.parseInt(IO.readln());
+
 
             // printing player's movable pawns
             ArrayList<Integer> movablePawnsIndexes = game.getPossibleMoves(steps);
@@ -34,27 +34,23 @@ public class Main {
             IO.println("]\n");
 
 
-            IO.println("----- possible games list start -----");
             // printing possible games using current steps
+            IO.println("----- possible games list start -----");
             ArrayList<Game> possibleGames = game.getPossibleGames(steps);
-            for (Game possibleGame : possibleGames) {
+            for (Game possibleGame : possibleGames)
                 IO.println(possibleGame);
-            }
             IO.println("----- possible games list end -----");
 
 
-            // choosing a pawn to move
-            IO.print("Enter pawn row: ");
-            int row = Integer.parseInt(IO.readln());
+            // calling appropriate play function
+            if (game.isComputerTurn) {
+                game.computerMove(steps);
+            } else {
+                game.playerMove(steps);
+            }
 
-            IO.print("Enter pawn col: ");
-            int col = Integer.parseInt(IO.readln());
-
-            IO.println();
-
-            game.playerMove(row, col, steps);
+            // printing game after taken move
             IO.println(game);
-
         }
     }
 }
