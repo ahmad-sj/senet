@@ -33,6 +33,16 @@ public class Main {
             }
             IO.println("]\n");
 
+
+            IO.println("----- possible games list start -----");
+            // printing possible games using current steps
+            ArrayList<Game> possibleGames = game.getPossibleGames(steps);
+            for (Game possibleGame : possibleGames) {
+                IO.println(possibleGame);
+            }
+            IO.println("----- possible games list end -----");
+
+
             // choosing a pawn to move
             IO.print("Enter pawn row: ");
             int row = Integer.parseInt(IO.readln());
@@ -44,6 +54,7 @@ public class Main {
 
             game.playerMove(row, col, steps);
             IO.println(game);
+
         }
     }
 }

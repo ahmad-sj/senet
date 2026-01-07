@@ -53,14 +53,6 @@ public class Game implements Cloneable {
         }
     }
 
-    public Game(ArrayList<Cell> board) {
-        this.board = new ArrayList<>();
-
-        for (int i = 0; i < board.size(); i++) {
-            board.add(board.get(i).clone());
-        }
-    }
-
     // overriding to string to print board arraylist on multiple lines
     @Override
     public String toString() {
@@ -115,24 +107,24 @@ public class Game implements Cloneable {
 
     // player move function
     public void playerMove(int cellRow, int cellCol, int steps) {
-        move(cellRow - 1, cellCol - 1, steps);
+        // check if entered row and col are in board boundaries
+        if (!isValidCoors(cellRow - 1, cellCol - 1)) {
+            IO.println("------------- incorrect row or col number! -------------\n");
+            return;
+        }
+
+        // get chosen cell index and object
+        int chosenCellIndex = getCellIndex(cellRow - 1, cellCol - 1);
+
+        move(chosenCellIndex, steps);
     }
 
     public void computerMove() {
 
     }
 
-    // move function
-    public void move(int cellRow, int cellCol, int steps) {
-        // check if entered row and col are in board boundaries
-        if (!isValidCoors(cellRow, cellCol)) {
-            IO.println("------------- incorrect row or col number! -------------\n");
-            return;
-        }
-
-        // get chosen cell index and object
-        int chosenCellIndex = getCellIndex(cellRow, cellCol);
-
+    // main move function
+    public void move(int chosenCellIndex, int steps) {
         if (!isValidMove(chosenCellIndex, steps)) {
             IO.println("------------- incorrect move! -------------\n");
             return;
@@ -178,7 +170,7 @@ public class Game implements Cloneable {
     }
 
     // get possible moves, takes allowed steps and checks current player
-    // returns a list of movable pawns numbers.
+    // returns a list of current player movable pawns indexes.
     ArrayList<Integer> getPossibleMoves(int allowedSteps) {
         ArrayList<Integer> pawnIndexes = new ArrayList<Integer>();
 
@@ -193,6 +185,26 @@ public class Game implements Cloneable {
         }
 
         return pawnIndexes;
+    }
+
+    ArrayList<Game> getPossibleGames(int allowedSteps) {
+        ArrayList<Game> possibleGames = new ArrayList<>();
+
+        // bring movable pawn indexes list
+        ArrayList<Integer> movablePawnIndexes = getPossibleMoves(allowedSteps);
+
+        for (Integer movablePawnIndex : movablePawnIndexes) {
+            // clone current game
+            Game cloned = this.clone();
+
+            // perform a move
+            cloned.move(movablePawnIndex, allowedSteps);
+
+            // add result to array list
+            possibleGames.add(cloned);
+        }
+
+        return possibleGames;
     }
 
 
@@ -212,11 +224,6 @@ public class Game implements Cloneable {
             return ((row * 10) + col);
 
         return ((row * 10) + 9 - col);
-    }
-
-    // check if cell index is in boundaries
-    boolean indexInBoundaries(int index) {
-        return index >= 0 && index <= 29;
     }
 
     // check if the pawn is NOT jumping over happiness cell
