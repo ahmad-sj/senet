@@ -1,56 +1,8 @@
-import java.util.ArrayList;
-import java.util.Random;
-
 public class Main {
+
     public static void main() {
 
-        Game game = new Game();
-
-        IO.println("\n=============================================================================");
-        IO.println(game);
-
-        while (game.hasWinner() == 0) {
-            IO.println("---------------------------------------------------------------------------\n");
-            game.printPlayerName();
-
-            // generating steps randomly (throwing sticks)
-//            int steps = game.toss();
-//            IO.print("------- allowed steps: [" + steps + "] -------\n\n");
-
-
-            // Entering steps manually
-            IO.print("Enter steps: ");
-            int steps = Integer.parseInt(IO.readln());
-
-
-            // printing player's movable pawns
-            ArrayList<Integer> movablePawnsIndexes = game.getPossibleMoves(steps);
-            IO.print("indexes of current player movable pawns with (" + steps + ") steps are:\n");
-            IO.print("[");
-            for (int i = 0; i < movablePawnsIndexes.size(); i++) {
-                IO.print((movablePawnsIndexes.get(i) + 1));
-                if (i + 1 < movablePawnsIndexes.size()) IO.print(", ");
-            }
-            IO.println("]\n");
-
-
-            // printing possible games using current steps
-            IO.println("----- possible games list start -----");
-            ArrayList<Game> possibleGames = game.getPossibleGames(steps);
-            for (Game possibleGame : possibleGames)
-                IO.println(possibleGame);
-            IO.println("----- possible games list end -----");
-
-
-            // calling appropriate play function
-            if (game.isComputerTurn) {
-                game.computerMove(steps);
-            } else {
-                game.playerMove(steps);
-            }
-
-            // printing game after taken move
-            IO.println(game);
-        }
+        Senet senet = new Senet();
+        senet.play();
     }
 }

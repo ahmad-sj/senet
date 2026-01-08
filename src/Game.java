@@ -102,51 +102,31 @@ public class Game implements Cloneable {
         return sb.toString();
     }
 
-    // ========================================================================
-    // play functions
-
-    // player move function
-    public void playerMove(int steps) {
-
-        // taking input from user to choose a pawn to move it
-        IO.print("Enter pawn row: ");
-        int cellRow = Integer.parseInt(IO.readln());
-        IO.print("Enter pawn col: ");
-        int cellCol = Integer.parseInt(IO.readln());
-        IO.println();
-
-        // check if entered row and col are in board boundaries
-        if (!isValidCoors(cellRow - 1, cellCol - 1)) {
-            IO.println("------------- incorrect row or col number! -------------\n");
-            return;
-        }
-
-        // get chosen cell index and object
-        int chosenCellIndex = getCellIndex(cellRow - 1, cellCol - 1);
-
-        // passing values to main move function
-        move(chosenCellIndex, steps);
-    }
-
-    // =================================================================================================================
-    // implement following functions properly
-
-    public void computerMove(int steps) {
-        // temporarily using playerMove function here
-        // main move function should be called here by expect min max algorithm
-        // and with the help of getPossibleGames function and heuristic function
-        // when choosing a game object as the best move to take
-        // chosen game object should be wrapped with the Node class
-        // and added to a list to keep track of solution path
-        playerMove(steps);
-    }
-
+    /**
+     * the heuristic value function looks at the number of squares the opponent needs to move their pawns to the end of the board,
+     * and compares that to the number of squares the current player needs to move its pawns to the end of the board.
+     */
     int heuristic() {
-        // implement code here to evaluate current game object
-        return 0;
-    }
+        int player1SquaresTotal = 0;
+        int player2SquaresTotal = 0;
 
-    // =================================================================================================================
+        // walk on board cells
+        for (int i = 0; i < board.size(); i++) {
+            // if pawn is for player 1
+            if (board.get(i).symbol.equals(playersSymbols[0])) {
+                // calc the number of squares for this pawn to reach the end of board
+                // add this number to player1 total square count
+                player1SquaresTotal += board.size() - i;
+            }
+            // if pawn is for player 2
+            if (board.get(i).symbol.equals(playersSymbols[1])) {
+                // calc the number of squares for this pawn to reach the end of board
+                // add this number to player2 total square count
+                player2SquaresTotal += board.size() - i;
+            }
+        }
+        return player1SquaresTotal - player2SquaresTotal;
+    }
 
     // main move function
     public void move(int chosenCellIndex, int steps) {
@@ -192,10 +172,10 @@ public class Game implements Cloneable {
     ArrayList<Integer> getPossibleMoves(int allowedSteps) {
         ArrayList<Integer> pawnIndexes = new ArrayList<Integer>();
 
-        String currentPlayerColor = (isComputerTurn ? " O " : " X ");
+        String currentPlayerSymbol = getCurrentPlayerSymbol();
 
         for (int i = 0; i < board.size(); i++) {
-            if (board.get(i).symbol.equals(currentPlayerColor)) {
+            if (board.get(i).symbol.equals(currentPlayerSymbol)) {
                 if (isValidMove(i, allowedSteps)) {
                     pawnIndexes.add(i);
                 }
@@ -327,6 +307,10 @@ public class Game implements Cloneable {
             IO.println("~ [ X's turn ] ~");
     }
 
+    String getCurrentPlayerSymbol() {
+        return (isComputerTurn ? playersSymbols[0] : playersSymbols[1]);
+    }
+
     // pass turns between players
     void switchTurns() {
         isComputerTurn = !isComputerTurn;
@@ -398,20 +382,20 @@ public class Game implements Cloneable {
 
     // send pawns to in cells 27 -> 29 rebirth
     void cleanSpecialCells() {
-        String currentPlayerColor = (isComputerTurn ? " O " : " X ");
+        String currentPlayerSymbol = getCurrentPlayerSymbol();
 
         // check if a pawn already exists in cell 27, and it's owned by the current player
-        if (board.get(27).symbol.equals(currentPlayerColor)) {
+        if (board.get(27).symbol.equals(currentPlayerSymbol)) {
             sendToRebirth(27);
         }
 
         // check if a pawn already exists in cell 28, and it's owned by the current player
-        if (board.get(28).symbol.equals(currentPlayerColor)) {
+        if (board.get(28).symbol.equals(currentPlayerSymbol)) {
             sendToRebirth(28);
         }
 
         // check if a pawn already exists in cell 29, and it's owned by the current player
-        if (board.get(29).symbol.equals(currentPlayerColor)) {
+        if (board.get(29).symbol.equals(currentPlayerSymbol)) {
             sendToRebirth(29);
         }
     }
@@ -426,6 +410,30 @@ public class Game implements Cloneable {
             steps += random.nextInt(2);
         }
         return steps == 0 ? 5 : steps;
+    }
+
+    public double tossValueProbability(int tossedValue) {
+        int throwCount = 4;
+        int singleThrowResults = 2;
+        double totalResults = Math.powExact(throwCount, singleThrowResults);  // 4^2
+
+        double PointsOccurrences
+                = (double) fact(throwCount)
+                / (double) (fact(tossedValue) * fact(throwCount - tossedValue));
+
+        return PointsOccurrences / totalResults;
+    }
+
+    // calculate factorial value of number
+    public long fact(int n) {
+        if (n < 0) {
+            throw new IllegalArgumentException("Number must be non-negative");
+        }
+        long result = 1;
+        for (int i = 1; i <= n; i++) {
+            result *= i;
+        }
+        return result;
     }
 
     // check wining status and returns 0: no winner, 1: player1 won, 2: player2 won
@@ -443,12 +451,10 @@ public class Game implements Cloneable {
         }
 
         if (player1Pawns == 0) {
-            IO.println("------------- player" + playersSymbols[0] + "Won! -------------\n");
             return 1;
         }
 
         if (player2Pawns == 0) {
-            IO.println("------------- player" + playersSymbols[1] + "Won! -------------\n");
             return 2;
         }
 
@@ -457,8 +463,8 @@ public class Game implements Cloneable {
 
     // check if a move is correct
     boolean isValidMove(int chosenCellIndex, int steps) {
-        // get current player color
-        String currentPlayerColor = (isComputerTurn ? " O " : " X ");
+        // get current player symbol
+        String currentPlayerSymbol = getCurrentPlayerSymbol();
 
         // get chosen cell object
         Cell chosenCellObject = board.get(chosenCellIndex);
@@ -467,8 +473,8 @@ public class Game implements Cloneable {
         if (!(chosenCellObject instanceof Pawn))
             return false;
 
-        // check if player did not choose a pawn of his own color
-        if (!chosenCellObject.symbol.equals(currentPlayerColor))
+        // check if player did not choose a pawn of his own
+        if (!chosenCellObject.symbol.equals(currentPlayerSymbol))
             return false;
 
         // if pawn is standing in cells 25 -> 29 and steps lead outside board
@@ -478,7 +484,7 @@ public class Game implements Cloneable {
         if (chosenCellIndex + steps < board.size()) {
             Cell targetCellObject = board.get(chosenCellIndex + steps);
 
-            // check if swapping between two pawns of the same color
+            // check if swapping between two pawns having the same symbol
             if (chosenCellObject.symbol.equals(targetCellObject.symbol))
                 return false;
         }
