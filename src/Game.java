@@ -11,6 +11,7 @@ public class Game implements Cloneable {
     boolean isComputerTurn;
     int player1Score;
     int player2Score;
+    public int lastMovedPawn;
 
     String[] cellsSymbols = {" & ", "...", "|||", "√√√", "∑∑∑", "% %", " @ "};
     String[] playersSymbols = {" O ", " X "};
@@ -20,23 +21,23 @@ public class Game implements Cloneable {
         board = new ArrayList<>();
 
         // adding players pawns, i: 0 -> 13
-//        for (int i = 0; i <= 13; i++) {
-//            if (i % 2 == 0)
-//                board.add(new Pawn(playersSymbols[0]));
-//            else
-//                board.add(new Pawn(playersSymbols[1]));
-//        }
-
-        for (int i = 0; i <= 3; i++) {
+        for (int i = 0; i <= 13; i++) {
             if (i % 2 == 0)
                 board.add(new Pawn(playersSymbols[0]));
             else
                 board.add(new Pawn(playersSymbols[1]));
         }
 
-        for (int i = 4; i <= 13; i++) {
-            board.add(new Cell());
-        }
+//        for (int i = 0; i <= 3; i++) {
+//            if (i % 2 == 0)
+//                board.add(new Pawn(playersSymbols[0]));
+//            else
+//                board.add(new Pawn(playersSymbols[1]));
+//        }
+//
+//        for (int i = 4; i <= 13; i++) {
+//            board.add(new Cell());
+//        }
 
 
         // adding rebirth house, i = 14
@@ -163,6 +164,7 @@ public class Game implements Cloneable {
             performMove(chosenCellIndex, targetCellIndex);
         }
 
+        lastMovedPawn = chosenCellIndex;
         // switch players turns after move is done correctly
         switchTurns();
     }

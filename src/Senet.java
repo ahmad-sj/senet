@@ -8,56 +8,13 @@ public class Senet {
         this.game = new Game();
     }
 
-    /*
-    When does a node become terminal?
-    The game rules say the state is game over (win, loss, draw).
-
-    The depth limit of the search is reached (for practical reasons, even if game is not over).
-
-    No legal moves exist.
-
-    At a terminal node, you return a heuristic/utility score:
-
-    For a finished game: +∞ (win), −∞ (loss), 0 (draw), or some fixed high/low number.
-
-    For a non-terminal but depth-limited leaf: a heuristic evaluation (e.g., material advantage in chess).
-    */
-
-    /* pseudocode
-    function expectiminimax(node, depth)
-    if node is a terminal node or depth = 0
-            return the heuristic value of node
-
-    if the adversary is to play at node
-    // Return value of minimum-valued child node
-    let α := +∞
-    foreach child of node
-    α := min(α, expectiminimax(child, depth-1))
-
-
-            else if we are to play at node
-    // Return value of maximum-valued child node
-    let α := -∞
-    foreach child of node
-    α := max(α, expectiminimax(child, depth-1))
-
-
-            else if random event at node
-    // Return weighted average of all child nodes' values
-    let α := 0
-    foreach child of node
-    α := α + (Probability[child] × expectiminimax(child, depth-1))
-            return α
-    */
-
     public void getComputerMove(int steps) {
-        // replace with expectminimax algorithm
-//        getPlayerMove(steps);
         ArrayList<Game> possibleGames = game.getPossibleGames(steps);
 
         if (possibleGames.isEmpty()) {
             return;
         }
+
         Game bestState = null;
         double bestValue = Double.NEGATIVE_INFINITY;
 
@@ -69,7 +26,8 @@ public class Senet {
             }
         }
 //        return bestState;
-        IO.println(bestState);
+        IO.println("best move: " + bestState.lastMovedPawn + "\n");
+        game.move(bestState.lastMovedPawn, steps);
     }
 
     double expectminimax(Game originalGame, int depth) {
@@ -89,10 +47,10 @@ public class Senet {
         double expectedValue = 0.0;
 
         // for each result of throwing sticks
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 0; i < 5; i++) {
             double stateProbability = this.game.tossValueProbability(i);
 
-            ArrayList<Game> possibleGames = this.game.getPossibleGames(i);
+            ArrayList<Game> possibleGames = this.game.getPossibleGames((i == 0 ? 5 : i));
 
             if (possibleGames.isEmpty()) {
                 Game skippedGame = originalGame.clone();
@@ -100,7 +58,7 @@ public class Senet {
                 double skippedGameValue = expectminimax(skippedGame, depth - 1); // not sure is correct
                 expectedValue += stateProbability * skippedGameValue;
                 continue;
-//                IO.println("minimax no move availbale");
+//                IO.println("minimax no move available");
             }
 
 
@@ -154,40 +112,9 @@ public class Senet {
             game.printPlayerName();
 
             // generating steps randomly (throwing sticks)
-//            int steps = game.toss();
-//            IO.print("------- allowed steps: [" + steps + "] -------\n\n");
+            int steps = game.toss();
+            IO.print("------- allowed steps: [" + steps + "] -------\n\n");
 
-
-            // ============================== testing section start ==============================
-            // Entering steps manually
-            IO.print("Enter steps: ");
-            int steps = Integer.parseInt(IO.readln());
-
-            IO.println();
-
-            // printing player's movable pawns
-            ArrayList<Integer> movablePawnsIndexes = game.getPossibleMoves(steps);
-            IO.print("indexes of current player movable pawns with (" + steps + ") steps are:\n");
-            IO.print("[");
-            for (int i = 0; i < movablePawnsIndexes.size(); i++) {
-                IO.print((movablePawnsIndexes.get(i) + 1));
-                if (i + 1 < movablePawnsIndexes.size()) IO.print(", ");
-            }
-            IO.println("]\n");
-
-
-            // printing possible games using current steps
-            IO.println("----- possible games list start -----");
-            ArrayList<Game> possibleGames = game.getPossibleGames(steps);
-            for (Game possibleGame : possibleGames) {
-                IO.println(possibleGame);
-                IO.println("\n>>> heuristic value: " + possibleGame.heuristic() + "\n");
-            }
-            IO.println("----- possible games list end -----");
-            // ============================== testing section end ==============================
-
-
-            IO.println("toss value probability: " + game.tossValueProbability(steps));
             ArrayList<Game> games = game.getPossibleGames(steps);
             if (games.isEmpty()) {
                 IO.println("------------------------- no moves available! -------------------------\n");
