@@ -26,7 +26,7 @@ public class Senet {
             }
         }
 //        return bestState;
-        IO.println("best move: " + bestState.lastMovedPawn + "\n");
+        IO.println("best move: " + (bestState.lastMovedPawn + 1) + "\n");
         game.move(bestState.lastMovedPawn, steps);
     }
 
@@ -84,23 +84,32 @@ public class Senet {
 
     public void getPlayerMove(int steps) {
         // taking input from user to choose a pawn to move it
-        IO.print("Enter pawn row: ");
-        int cellRow = Integer.parseInt(IO.readln());
-        IO.print("Enter pawn col: ");
-        int cellCol = Integer.parseInt(IO.readln());
-        IO.println();
+        while (true) {
+            IO.print("Enter pawn row: ");
+            int cellRow = Integer.parseInt(IO.readln());
+            IO.print("Enter pawn col: ");
+            int cellCol = Integer.parseInt(IO.readln());
+            IO.println();
 
-        // check if entered row and col are in board boundaries
-        if (!game.isValidCoors(cellRow - 1, cellCol - 1)) {
-            IO.println("------------- incorrect row or col number! -------------\n");
-            return;
+            // check if entered row and col are in board boundaries
+            if (!game.isValidCoors(cellRow - 1, cellCol - 1)) {
+                IO.println("------------- incorrect row or col number! -------------\n");
+                return;
+            }
+
+            // get chosen cell index and object
+            int chosenCellIndex = game.getCellIndex(cellRow - 1, cellCol - 1);
+
+            if (game.isValidMove(chosenCellIndex, steps)) {
+                // passing values to main move function
+                game.move(chosenCellIndex, steps);
+                break;
+            } else {
+                IO.println("------------- incorrect move! -------------\n");
+            }
+
         }
 
-        // get chosen cell index and object
-        int chosenCellIndex = game.getCellIndex(cellRow - 1, cellCol - 1);
-
-        // passing values to main move function
-        game.move(chosenCellIndex, steps);
     }
 
     public void play() {
