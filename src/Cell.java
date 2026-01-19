@@ -1,7 +1,3 @@
-package cells;
-
-import java.util.ArrayList;
-
 public class Cell implements Cloneable {
     public String symbol;
 

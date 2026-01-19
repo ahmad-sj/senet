@@ -1,57 +1,45 @@
-import cells.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class Game implements Cloneable {
+public class State implements Cloneable {
 
     ArrayList<Cell> board;
     boolean isComputerTurn;
     int player1Score;
     int player2Score;
     public int lastMovedPawn;
+    public int lastSteps;
 
     String[] cellsSymbols = {" & ", "...", "|||", "√√√", "∑∑∑", "% %", " @ "};
     String[] playersSymbols = {" O ", " X "};
 
-    // default constructor, used to create a new game object
-    public Game() {
+    // constructor, used to create a new game object
+    public State(int pawnsCount) {
         board = new ArrayList<>();
 
-        // adding players pawns, i: 0 -> 13
-        for (int i = 0; i <= 13; i++) {
-            if (i % 2 == 0)
-                board.add(new Pawn(playersSymbols[0]));
-            else
-                board.add(new Pawn(playersSymbols[1]));
+        // adding empty cells, i: 15 -> 24 empty cells
+        for (int i = 0; i <= 29; i++) {
+            board.add(new Cell());
         }
 
-//        for (int i = 0; i <= 3; i++) {
-//            if (i % 2 == 0)
-//                board.add(new Pawn(playersSymbols[0]));
-//            else
-//                board.add(new Pawn(playersSymbols[1]));
-//        }
-//
-//        for (int i = 4; i <= 13; i++) {
-//            board.add(new Cell());
-//        }
-
-
         // adding rebirth house, i = 14
-        board.add(new Cell(cellsSymbols[0]));
+        board.set(14, new Cell(cellsSymbols[0]));
 
-        // adding empty cells, i: 15 -> 24 empty cells
-        for (int i = 15; i <= 24; i++) {
-            board.add(new Cell(cellsSymbols[1]));
+        for (int i = 0; i < pawnsCount; i++) {
+            if (i % 2 == 0)
+                board.set(i, new Cell(playersSymbols[0]));
+            else
+                board.set(i, new Cell(playersSymbols[1]));
         }
 
         // adding special cells, i: 25 -> 29
-        for (int i = 2; i <= 6; i++) {
-            board.add(new Cell(cellsSymbols[i]));
-        }
+        board.set(25, new Cell(cellsSymbols[2]));
+        board.set(26, new Cell(cellsSymbols[3]));
+        board.set(27, new Cell(cellsSymbols[4]));
+        board.set(28, new Cell(cellsSymbols[5]));
+        board.set(29, new Cell(cellsSymbols[6]));
     }
 
     // overriding to string to print board arraylist on multiple lines
@@ -126,7 +114,7 @@ public class Game implements Cloneable {
                 player2SquaresTotal += board.size() - i;
             }
         }
-        return player1SquaresTotal - player2SquaresTotal;
+        return player2SquaresTotal - player1SquaresTotal;
     }
 
     // main move function
@@ -138,7 +126,9 @@ public class Game implements Cloneable {
 
         // if move leads to a promotion
         if (isPromoted(chosenCellIndex, steps)) {
-            IO.println("------------- pawn promoted! -------------\n");
+//            IO.println("------------- pawn promoted! -------------\n");
+            lastMovedPawn = chosenCellIndex;
+            lastSteps = steps;
 
             // switch to the other player's turn
             switchTurns();
@@ -165,6 +155,7 @@ public class Game implements Cloneable {
         }
 
         lastMovedPawn = chosenCellIndex;
+        lastSteps = steps;
         // switch players turns after move is done correctly
         switchTurns();
     }
@@ -187,24 +178,24 @@ public class Game implements Cloneable {
         return pawnIndexes;
     }
 
-    ArrayList<Game> getPossibleGames(int allowedSteps) {
-        ArrayList<Game> possibleGames = new ArrayList<>();
+    ArrayList<State> getPossibleStates(int allowedSteps) {
+        ArrayList<State> possibleStates = new ArrayList<>();
 
         // bring movable pawn indexes list
         ArrayList<Integer> movablePawnIndexes = getPossibleMoves(allowedSteps);
 
         for (Integer movablePawnIndex : movablePawnIndexes) {
             // clone current game
-            Game cloned = this.clone();
+            State cloned = this.clone();
 
             // perform a move
             cloned.move(movablePawnIndex, allowedSteps);
 
             // add result to array list
-            possibleGames.add(cloned);
+            possibleStates.add(cloned);
         }
 
-        return possibleGames;
+        return possibleStates;
     }
 
     // check if entered row and col are in board boundaries
@@ -257,6 +248,12 @@ public class Game implements Cloneable {
 
         // check if symbol of chosen cell is in empty cell symbol
         return symbolList.contains(cell.symbol);
+    }
+
+    // check if cell represents a pawn
+    boolean isPawn(int index) {
+        return board.get(index).symbol.equals(playersSymbols[0]) ||
+                board.get(index).symbol.equals(playersSymbols[1]);
     }
 
     // move pawn to an empty cell or swap pawns if target cell is busy
@@ -414,30 +411,6 @@ public class Game implements Cloneable {
         return steps == 0 ? 5 : steps;
     }
 
-    public double tossValueProbability(int tossedValue) {
-        int throwCount = 4;
-        int singleThrowResults = 2;
-        double totalResults = Math.powExact(throwCount, singleThrowResults);  // 4^2
-
-        double PointsOccurrences
-                = (double) fact(throwCount)
-                / (double) (fact(tossedValue) * fact(throwCount - tossedValue));
-
-        return PointsOccurrences / totalResults;
-    }
-
-    // calculate factorial value of number
-    public long fact(int n) {
-        if (n < 0) {
-            throw new IllegalArgumentException("Number must be non-negative");
-        }
-        long result = 1;
-        for (int i = 1; i <= n; i++) {
-            result *= i;
-        }
-        return result;
-    }
-
     // check wining status and returns 0: no winner, 1: player1 won, 2: player2 won
     int hasWinner() {
         boolean win = false;
@@ -472,7 +445,7 @@ public class Game implements Cloneable {
         Cell chosenCellObject = board.get(chosenCellIndex);
 
         // check if chosen cell do not have a pawn in it
-        if (!(chosenCellObject instanceof Pawn))
+        if (!isPawn(chosenCellIndex))
             return false;
 
         // check if player did not choose a pawn of his own
@@ -507,16 +480,14 @@ public class Game implements Cloneable {
     }
 
     @Override
-    public Game clone() {
+    public State clone() {
         try {
-            Game cloned = (Game) super.clone();
-
+            State cloned = (State) super.clone();
             cloned.board = new ArrayList<>();
             for (Cell cell : this.board) {
                 cloned.board.add(cell.clone());
             }
             return cloned;
-
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e);
         }
