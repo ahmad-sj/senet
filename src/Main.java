@@ -3,8 +3,11 @@ public class Main {
     public static void main() {
         IO.println("\n=============================================================================\n");
 
-        Senet.setPawnsCount();
         Senet senet = new Senet();
+        senet.setPawnsCount();
+        senet.setSearchDepth();
+        senet.setDetailsViewMode();
+        senet.setPlayMode();
         senet.play();
     }
 }

@@ -4,13 +4,13 @@ public class Senet {
     State state;
     int count = 0;                 // used to count nodes in search tree
     int roundNo = 1;               // keep track of round number
-    static int pawnsCount = 2;     // set pawns number to play with
+    int pawnsCount = 2;            // holds pawns number to play with
     int depth = 2;                 // search tree depth
     boolean viewDetails;           // used to show search details in console or not
     int playMode = 1;              // to set play mode (player vs computer or computer vs computer)
 
     public Senet() {
-        this.state = new State(pawnsCount);
+        this.state = new State(14);
     }
 
     // computer as a max player
@@ -32,7 +32,10 @@ public class Senet {
             }
         }
 
-        IO.println("~ best move: [" + (bestNode.state.lastMovedPawn + 1) + "]\n");
+        IO.println("~ chosen move: [" + (bestNode.state.lastMovedPawn + 1) + " : " + bestNode.state.lastSteps + "]\n"
+                + "~ evaluation: " + bestNode.evaluation + "\n"
+                + "~ node type: " + bestNode.getType() + "\n"
+        );
 
         if (viewDetails)
             printSearchTree(exploredNodes);
@@ -153,10 +156,6 @@ public class Senet {
 
     // function to start playing game
     public void play() {
-        getDepthFromUser();
-        askToViewSearchDetails();
-        setPlayMode();
-
         while (state.hasWinner() == 0) {
             IO.println("--------------------------- round[" + roundNo + "] ---------------------------\n");
             IO.println(state);
@@ -227,34 +226,24 @@ public class Senet {
         return false;
     }
 
+    // =======================================
     // functions to print search tree details
     void printSearchTree(ArrayList<Node> nodesList) {
         this.count = 0;
 
         IO.println("=========================== search details ===========================");
-        System.out.format("%-10s%-10s%-20s%-10s%-10s%n", "no", "type", "eval", "move", "child count");
-
+        System.out.format("%-10s%-10s%-20s%-10s%-10s%n", "node", "type", "eval", "move", "child count");
         for (Node node : nodesList) {
-            printSearchNode(node);
-
-            if (node.bestChild != null) {
-                IO.println("\n~ best node:\n"
-                        + "  - move: " + (node.bestChild.state.lastMovedPawn + 1)
-                        + " : " + (node.bestChild.state.lastSteps) + "\n"
-                        + "  - evaluation: " + (node.bestChild.evaluation) + "\n"
-
-                );
-            } else {
-                IO.println("no best node\n");
-            }
+            printSearchNode(node, 0);
         }
         IO.println("=====================================================================\n");
     }
 
-    void printSearchNode(Node node) {
-        count += 1;
+    public void printSearchNode(Node node, int indent) {
+        count++;
 
-        System.out.format("%-10s%-10s%-20s%-10s%-10s%n",
+        System.out.format("%s%-10s%-10s%-20s%-10s%-10s%n",
+                getIndent(indent) + "|- ",
                 count,
                 node.getType(),
                 node.evaluation,
@@ -262,15 +251,23 @@ public class Senet {
                 node.childrenCount() == 0 ? "-" : node.childrenCount());
 
         if (!node.children.isEmpty()) {
-            for (int i = 0; i < node.children.size(); i++) {
-                Node child = node.children.get(i);
-                printSearchNode(child);
+            for (Node child : node.children) {
+                printSearchNode(child, indent + 1);
             }
         }
     }
 
-    // helper functions to take input from user
-    public void getDepthFromUser() {
+    String getIndent(int i) {
+        StringBuilder sb = new StringBuilder();
+        for (int j = 0; j < i; j++) {
+            sb.append("```");
+        }
+        return sb.toString();
+    }
+
+    // =======================================
+    // functions to take input from user before starting game
+    public void setSearchDepth() {
         while (true) {
             IO.print("> enter expectminimax depth value (default = 2): ");
             String input = IO.readln();
@@ -293,7 +290,7 @@ public class Senet {
         }
     }
 
-    void askToViewSearchDetails() {
+    void setDetailsViewMode() {
         IO.print("> show search details? [y] / [n] (default): ");
         String input = IO.readln();
 
@@ -331,20 +328,20 @@ public class Senet {
         }
     }
 
-    public static void setPawnsCount() {
+    public void setPawnsCount() {
         while (true) {
             IO.print("> enter number of pawns to play with (default = 2): ");
             String input = IO.readln();
 
             if (input.trim().isEmpty()) {
-                return;
+                break;
             } else {
                 try {
                     int count = Integer.parseInt(input);
                     if (count < 2 || count > 14) {
                         IO.println("--------------------- entered value is incorrect! ---------------------");
                     } else {
-                        pawnsCount = count;
+                        this.pawnsCount = count;
                         break;
                     }
                 } catch (NumberFormatException e) {
@@ -352,5 +349,6 @@ public class Senet {
                 }
             }
         }
+        this.state = new State(this.pawnsCount);
     }
 }
